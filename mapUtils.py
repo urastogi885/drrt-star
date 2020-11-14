@@ -32,4 +32,4 @@ def writeMap(imageFileName, mapFileName):
 
 
 if __name__ == "__main__":
-    writeMap("map.jpg", "map.txt")
+    writeMap("map.png", "map.txt")
