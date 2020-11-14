@@ -1,21 +1,26 @@
 from scipy.spatial import cKDTree
 import random
 import mapUtils
+import numpy as np
+import matplotlib.pyplot as plt
+import math
 
 
 # No. of sample points
 N_SAMPLE_POINTS = 100
+N_KNN = 10
+MAX_EDGE_LEN = 30.0
 
 
 def get_sample_points(start_point, goal_point, robot_size, obstacle_points, obstacle_tree):
     sample_x, sample_y = [], []
 
-    max_x, max_y = max(obstacle_points[1]), max(obstacle_points[2])
-    min_x, min_y = min(obstacle_points[1]), min(obstacle_points[2])
+    max_x, max_y = max(obstacle_points[0]), max(obstacle_points[1])
+    min_x, min_y = min(obstacle_points[0]), min(obstacle_points[1])
 
     while len(sample_x) <= N_SAMPLE_POINTS:
-        tx = (random.random() * (max_x - min_x)) + min_x
-        ty = (random.random() * (max_y - min_y)) + min_y
+        tx = int((random.random() * (max_x - min_x)) + min_x)
+        ty = int((random.random() * (max_y - min_y)) + min_y)
 
         dist, index = obstacle_tree.query([tx, ty])
 
@@ -23,19 +28,92 @@ def get_sample_points(start_point, goal_point, robot_size, obstacle_points, obst
             sample_x.append(tx)
             sample_y.append(ty)
 
-    sample_x.append(start_point[1])
-    sample_y.append(start_point[2])
-    sample_x.append(goal_point[1])
-    sample_y.append(goal_point[2])
+    sample_x.append(start_point[0])
+    sample_y.append(start_point[1])
+    sample_x.append(goal_point[0])
+    sample_y.append(goal_point[1])
 
     return sample_x, sample_y
 
 
-def get_obstacle_tree(map_file_name):
+def get_obstacle_points(map_file_name):
     obstacles_x, obstacles_y = [], []
-    map = mapUtils.readMap(map_file_name)
-    print(len(map))
+    map_array = mapUtils.readMap(map_file_name)
+    for i in range(len(map_array)):
+        for j in range(len(map_array[0])):
+            if map_array[i][j] == 1:
+                obstacles_x.append(i), obstacles_y.append(j)
+    return obstacles_x, obstacles_y
+
+
+def get_obstacle_tree(obstacle_points):
+    return cKDTree(np.vstack((obstacle_points[0], obstacle_points[1])).T)
+
+
+def is_collision(sx, sy, gx, gy, robot_size, obstacle_tree):
+    x = sx
+    y = sy
+    dx = gx - sx
+    dy = gy - sy
+    yaw = math.atan2(gy - sy, gx - sx)
+    d = math.hypot(dx, dy)
+
+    if d >= MAX_EDGE_LEN:
+        return True
+
+    D = robot_size
+    n_step = round(d / D)
+
+    for i in range(n_step):
+        dist, _ = obstacle_tree.query([x, y])
+        if dist <= robot_size:
+            return True  # collision
+        x += D * math.cos(yaw)
+        y += D * math.sin(yaw)
+
+    # goal point check
+    dist, _ = obstacle_tree.query([gx, gy])
+    if dist <= robot_size:
+        return True  # collision
+
+    return False  # OK
+
+
+def generate_roadmap(start_point, goal_point, robot_size, animation=False):
+    vertices, edges = [], []
+    obstacle_points = get_obstacle_points('map.txt')
+    obstacle_tree = get_obstacle_tree(obstacle_points)
+    sample_points = get_sample_points(start_point, goal_point, robot_size, obstacle_points, obstacle_tree)
+    if animation:
+        plt.plot(sample_points[0], sample_points[1], ".b")
+        plt.show()
+
+    n_sample = len(sample_points[0])
+    sample_tree = cKDTree(np.vstack((sample_points[0], sample_points[1])).T)
+
+    for (i, ix, iy) in zip(range(n_sample), sample_points[0], sample_points[1]):
+        dists, indexes = sample_tree.query([ix, iy], k=n_sample)
+        edge_i = []
+        vertex_i = [[ix, iy]]
+        count = 0
+        for ii in range(1, len(indexes)):
+            nx = sample_points[0][indexes[ii]]
+            ny = sample_points[1][indexes[ii]]
+            if not is_collision(ix, iy, nx, ny, robot_size, obstacle_tree):
+                count += 1
+                vertex_i.append([nx, ny])
+                edge_i.append([i, (i*N_KNN) + count])
+
+            if len(vertex_i) >= N_KNN:
+                break
+        if len(edge_i):
+            vertices += vertex_i
+            edges += edge_i
+
+    #  plot_road_map(road_map, sample_x, sample_y)
+
+    return vertices, edges
 
 
 if __name__ == "__main__":
-    get_obstacle_tree("map.txt")
+    generate_roadmap((5, 5), (95, 90), 2)
