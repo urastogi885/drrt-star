@@ -79,7 +79,7 @@ def is_collision(sx, sy, gx, gy, robot_size, obstacle_tree):
     return False  # OK
 
 
-def generate_roadmap(start_point, goal_point, robot_size, animation=False):
+def generate_roadmap(start_point, goal_point, robot_size=1, animation=False):
     vertices, edges = [], []
     obstacle_points = get_obstacle_points('map.txt')
     obstacle_tree = get_obstacle_tree(obstacle_points)
