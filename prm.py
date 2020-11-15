@@ -92,28 +92,26 @@ def generate_roadmap(start_point, goal_point, robot_size=1, animation=False):
     for (i, ix, iy) in zip(range(n_sample), sample_points[0], sample_points[1]):
         dists, indexes = sample_tree.query([ix, iy], k=n_sample)
         edge_i = []
-        vertex_i = [[ix, iy]]
-        sample_node_idx = 0
-        count = 1
-        if i:
-            last_edge = edges[-1]
-            sample_node_idx = last_edge[1] + 1
-            count = last_edge[1] + 2
+        vertex_i = []
+        if [ix, iy] in vertices:
+            sample_node_idx = vertices.index([ix, iy])
+        else:
+            sample_node_idx = len(vertices)
         for ii in range(1, len(indexes)):
             nx = sample_points[0][indexes[ii]]
             ny = sample_points[1][indexes[ii]]
+            # collision = is_collision(ix, iy, nx, ny, robot_size, obstacle_tree)
             if not is_collision(ix, iy, nx, ny, robot_size, obstacle_tree):
                 if [nx, ny] not in vertices:
-                    edge_i.append([sample_node_idx, count])
                     vertex_i.append([nx, ny])
-                    count += 1
+                    edge_i.append([sample_node_idx, len(vertices) + len(vertex_i)])
                 else:
                     idx = vertices.index([nx, ny])
-                    edge_i.append([sample_node_idx, vertices[idx][1]])
+                    edge_i.append([sample_node_idx, idx])
 
-            if len(vertex_i) >= N_KNN:
+            if len(edge_i) >= N_KNN:
                 break
-        if len(edge_i):
+        if len(edge_i) > 0:
             vertices += vertex_i
             edges += edge_i
 
