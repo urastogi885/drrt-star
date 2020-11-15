@@ -60,16 +60,14 @@ def is_collision(sx, sy, gx, gy, robot_size, obstacle_tree):
 
     if d >= MAX_EDGE_LEN:
         return True
-
-    D = robot_size
-    n_step = round(d / D)
+    n_step = round(d / robot_size)
 
     for i in range(n_step):
         dist, _ = obstacle_tree.query([x, y])
         if dist <= robot_size:
             return True  # collision
-        x += D * math.cos(yaw)
-        y += D * math.sin(yaw)
+        x += robot_size * math.cos(yaw)
+        y += robot_size * math.sin(yaw)
 
     # goal point check
     dist, _ = obstacle_tree.query([gx, gy])
@@ -95,14 +93,23 @@ def generate_roadmap(start_point, goal_point, robot_size=1, animation=False):
         dists, indexes = sample_tree.query([ix, iy], k=n_sample)
         edge_i = []
         vertex_i = [[ix, iy]]
-        count = 0
+        sample_node_idx = 0
+        count = 1
+        if i:
+            last_edge = edges[-1]
+            sample_node_idx = last_edge[1] + 1
+            count = last_edge[1] + 2
         for ii in range(1, len(indexes)):
             nx = sample_points[0][indexes[ii]]
             ny = sample_points[1][indexes[ii]]
             if not is_collision(ix, iy, nx, ny, robot_size, obstacle_tree):
-                count += 1
                 vertex_i.append([nx, ny])
-                edge_i.append([i, (i*N_KNN) + count])
+                if [nx, ny] not in vertices:
+                    edge_i.append([sample_node_idx, count])
+                    count += 1
+                else:
+                    idx = vertices.index([nx, ny])
+                    edge_i.append([sample_node_idx, vertices[idx][1]])
 
             if len(vertex_i) >= N_KNN:
                 break
