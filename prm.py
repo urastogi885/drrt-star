@@ -10,6 +10,7 @@ import math
 N_SAMPLE_POINTS = 100
 N_KNN = 10
 MAX_EDGE_LEN = 30.0
+CENTER = [0, 0]
 
 
 def get_sample_points(start_point, goal_point, robot_size, obstacle_points, obstacle_tree):
@@ -32,6 +33,8 @@ def get_sample_points(start_point, goal_point, robot_size, obstacle_points, obst
     sample_y.append(start_point[1])
     sample_x.append(goal_point[0])
     sample_y.append(goal_point[1])
+    sample_x.append(CENTER[0])
+    sample_y.append(CENTER[1])
 
     return sample_x, sample_y
 
@@ -39,6 +42,7 @@ def get_sample_points(start_point, goal_point, robot_size, obstacle_points, obst
 def get_obstacle_points(map_file_name):
     obstacles_x, obstacles_y = [], []
     map_array = mapUtils.readMap(map_file_name)
+    CENTER[0], CENTER[1] = len(map_array)//2, len(map_array[0])//2
     for i in range(len(map_array)):
         for j in range(len(map_array[0])):
             if map_array[i][j] == 1:
