@@ -97,6 +97,7 @@ def generate_roadmap(start_point, goal_point, robot_size=1, animation=False):
             sample_node_idx = vertices.index([ix, iy])
         else:
             sample_node_idx = len(vertices)
+            vertex_i.append([ix, iy])
         for ii in range(1, len(indexes)):
             nx = sample_points[0][indexes[ii]]
             ny = sample_points[1][indexes[ii]]
@@ -104,7 +105,7 @@ def generate_roadmap(start_point, goal_point, robot_size=1, animation=False):
             if not is_collision(ix, iy, nx, ny, robot_size, obstacle_tree):
                 if [nx, ny] not in vertices:
                     vertex_i.append([nx, ny])
-                    edge_i.append([sample_node_idx, len(vertices) + len(vertex_i)])
+                    edge_i.append([sample_node_idx, len(vertices) + len(vertex_i) - 1])
                 else:
                     idx = vertices.index([nx, ny])
                     edge_i.append([sample_node_idx, idx])
@@ -116,7 +117,6 @@ def generate_roadmap(start_point, goal_point, robot_size=1, animation=False):
             edges += edge_i
 
     #  plot_road_map(road_map, sample_x, sample_y)
-
     return vertices, edges
 
 
