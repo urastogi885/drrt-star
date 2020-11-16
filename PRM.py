@@ -31,8 +31,8 @@ def generateRoadMap(pointsCount, conectionLength, fixedPoints=[]):
         if map[y][x] == 0:
             vertices.append([x, y])
     for point in fixedPoints:
-        if map[point[0]][point[1]] == 0:
-            vertices.append([x, y])
+        if map[point[1]][point[0]] == 0:
+            vertices.append(point)
 
     for i in range(len(vertices)):
         for j in range(i + 1, len(vertices)):

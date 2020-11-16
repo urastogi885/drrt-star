@@ -4,7 +4,12 @@ import pygame
 from mapUtils import readMap
 from PRM import generateRoadMap
 
-vertices, edges = generateRoadMap(100,20)
+fixed_nodes = [[60, 38], [51, 47], [50, 33], [51, 71], [69, 72], [36, 38], [19, 61], [5, 93], [5, 93], [26, 95],
+               [82, 96], [55, 97], [49, 16], [83, 37], [4, 5], [6, 22], [10, 37], [26, 34], [24, 10], [47, 5], [27, 3],
+               [46, 30], [68, 3], [70, 20], [70, 32], [92, 6], [93, 27], [7, 61], [5, 79], [24, 73], [47, 64], [36, 60],
+               [71, 59], [89, 59], [91, 78], [70, 87], [47, 89]]
+
+vertices, edges = generateRoadMap(0,25, fixed_nodes)
 multiplier = 5
 
 map = readMap("map.txt")
@@ -25,13 +30,17 @@ for edge in edges:
         pygame.draw.aaline(screen, (100,100, 255), (vertices[edge[0]][0] * multiplier, vertices[edge[0]][1] * multiplier), (vertices[edge[1]][0] * multiplier, vertices[edge[1]][1] * multiplier))
 
 running = True
+pos = []
 while running:
 
     # Did the user click the window close button?
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.MOUSEBUTTONUP:
+            pos.append([int(pygame.mouse.get_pos()[0]/ multiplier), int(pygame.mouse.get_pos()[1]/ multiplier)])
 
     pygame.display.flip()
+print(pos)
 
 pygame.quit()
