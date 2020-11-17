@@ -7,6 +7,10 @@ class Node:
         self.env = env
         self.parent = parent
         self.distance = 0
+        if parent != None:
+            self.costToCome = parent.costToCome + 1
+        else:
+            self.costToCome = 0
 
     def updateDistance(self, i):
         self.distance = sqrt((self.env[0][0] - i[0][0]) ** 2 + (self.env[0][1] - i[0][1]) ** 2 + (self.env[1][0] - i[1][0]) ** 2 + (

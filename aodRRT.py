@@ -69,6 +69,17 @@ end2 = [47, 64]
 start = [start1, start2]
 end = [end1, end2]
 
+def getParent(nodes, val):
+    for node in nodes:
+        if node.env == val:
+            return node
+
+def ifInNodes(val, nodes):
+    for node in nodes:
+        if node.env == val:
+            return True
+    return False
+
 
 nodes = []
 result = []
@@ -103,11 +114,32 @@ for i in range(300000):
         if neighbour.env[0] != neighbour.env[1]:
             nodes.append(Node(neighbour.env, nearestNode))
             break
+
+
+
     if neighboursList[0].env == end:
         # for i in range(len(nodes)):
         #     nodes[i].updateDistance(end)
-        result = list(Node(neighboursList[0].env, nearestNode).path())
+        result = Node(neighboursList[0].env, nearestNode)
         break
+for _ in range(5):
+    for node in nodes:
+        neighbourHood = []
+        index = GHat.index(node.env)
+        for i in E_Hat:
+            if index in i:
+                for tempVertex in i:
+                    if tempVertex != index:
+                        if ifInNodes(GHat[tempVertex], nodes):
+                            if tempVertex not in neighbourHood:
+                                neighbourHood.append(tempVertex)
+        for i in neighbourHood:
+            newParent = getParent(nodes, GHat[i])
+            if node.parent is not None:
+                if node.parent.costToCome > newParent.costToCome:
+                    node.parent = newParent
+
+result = list(result.path())
 print(time()-prev, len(result))
 for i in result:
     print(i.env)
