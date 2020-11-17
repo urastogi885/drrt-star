@@ -122,7 +122,7 @@ for i in range(300000):
         #     nodes[i].updateDistance(end)
         result = Node(neighboursList[0].env, nearestNode)
         break
-for _ in range(5):
+for _ in range(2):
     for node in nodes:
         neighbourHood = []
         index = GHat.index(node.env)

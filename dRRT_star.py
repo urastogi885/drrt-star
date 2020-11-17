@@ -1,165 +1,207 @@
 from PRM import generateRoadMap
 from Node import Node
-import random
-import time
+import numpy as np
+from math import sqrt
 from copy import deepcopy
+from time import time
 
+fixed_nodes = [[60, 38], [51, 47], [50, 33], [51, 71], [69, 72], [36, 38], [19, 61], [5, 93], [5, 93], [26, 95],
+               [82, 96], [55, 97], [49, 16], [83, 37], [4, 5], [6, 22], [10, 37], [26, 34], [24, 10], [47, 5], [27, 3],
+               [46, 30], [68, 3], [70, 20], [70, 32], [92, 6], [93, 27], [7, 61], [5, 79], [24, 73], [47, 64], [36, 60],
+               [71, 59], [89, 59], [91, 78], [70, 87], [47, 89], [64, 5], [52, 60], [48, 61], [51, 38], [48, 36]]
 
-def get_graph(v):
-    g_hat = []
-    for i in v:
-        for j in v:
-            g_hat.append([i, j])
-    return g_hat
+# fixed_nodes = [[25, 25], [25, 50], [25, 75],
+#                [50, 25], [50, 50], [50, 75],
+#                [75, 25], [75, 50], [75, 75]]
+vertices, edges = generateRoadMap(0, 25, fixed_nodes)
 
+GHat = []
+for i in vertices:
+    for j in vertices:
+        GHat.append([i, j])
 
-def get_edge_list(graph, v, e):
-    e_hat = []
-    for i in range(len(graph)):
-        for j in range(len(graph)):
-
-            if graph[i] == graph[j]:
-                pass
-            elif graph[i][0] == graph[j][0]:
-                index1 = v.index(graph[i][1])
-                index2 = v.index(graph[j][1])
-                if [index1, index2] in e or [index2, index1] in e:
-                    e_hat.append([i, j])
-            elif graph[i][1] == graph[j][1]:
-                index1 = v.index(graph[i][0])
-                index2 = v.index(graph[j][0])
-                if [index1, index2] in e or [index2, index1] in e:
-                    e_hat.append([i, j])
-            else:
-                index1 = v.index(graph[i][0])
-                index2 = v.index(graph[j][0])
-                index3 = v.index(graph[i][1])
-                index4 = v.index(graph[j][1])
-                if ([index1, index2] in e or [index2, index1] in e) and (
-                        [index3, index4] in e or [index4, index3] in e):
-                    e_hat.append([i, j])
-    return e_hat
-
-class DRRTStar:
-    def __init__(self, graph, e_mat, start_points, target_points, exp_steps, n_robots):
-        self.g_hat = graph
-        self.e_hat = e_mat
-        self.start_points = start_points
-        self.target_points = target_points
-        self.n_it = exp_steps
-        self.n_robots = n_robots
-        self.tree = [Node(start_points)]
-        self.best_path = None
-        self.last_vertices = Node(start_points)
-
-    def connect_to_target(self):
-        return self.best_path
-
-    def drrt_star(self, time_limit=-1):
-        # start_time = time.time()
-        # while time.time() - start_time < time_limit:
-        for _ in range(self.n_it):
-            self.last_vertices = self.expand_drrt_star(self.last_vertices)
-        path = self.connect_to_target()
-        if path is not None and self.get_cost(path) < self.get_cost(self.best_path):
-            self.best_path = deepcopy(path)
-        return self.best_path
-
-    def get_nearest_node(self, point):
-        for i in range(len(self.tree)):
-            self.tree[i].updateDistance(point)
-        self.tree.sort(key=lambda x: x.distance)
-        return self.tree[0]
-
-    def get_neighbors(self, node):    # TODO: Fix this! Should return 2 nodes/vertices
-        neighbors_index_list = []
-        index = self.g_hat.index(node.env)
-        for e in self.e_hat:
-            if index in e:
-                for p in e:
-                    if p != index:
-                        neighbors_index_list.append(p)
-
-        neighbors_list = []
-        for index in neighbors_index_list:
-            neighbors_list.append(Node(self.g_hat[index]))
-        return neighbors_list
-
-    def informed_expansion(self, v_near, q_rand):
-        neighbors = self.get_neighbors(v_near)
-        if q_rand == self.target_points:
-            for i in range(len(neighbors)):
-                neighbors[i].updateDistance(self.target_points)
-            neighbors.sort(key=lambda x: x.distance)
-            return neighbors[0]
-
-        return random.choice(neighbors)
-
-    def expand_drrt_star(self, v_last):
-        q_rand = []
-        if v_last is None:
-            # Get random points from the environment
-            for _ in range(self.n_robots):
-                q_rand.append([random.randrange(0, 100), random.randint(0, 100)])
-            # Assign values to v_near
-            v_near = deepcopy(self.get_nearest_node(q_rand))
+E_Hat = []
+for i in range(len(GHat)):
+    for j in range(len(GHat)):
+        if GHat[i] == GHat[j]:
+            pass
+        elif GHat[i][0] == GHat[j][0]:
+            index1 = vertices.index(GHat[i][1])
+            index2 = vertices.index(GHat[j][1])
+            if [index1, index2] in edges or [index2, index1] in edges:
+                E_Hat.append([i, j])
+        elif GHat[i][1] == GHat[j][1]:
+            index1 = vertices.index(GHat[i][0])
+            index2 = vertices.index(GHat[j][0])
+            if [index1, index2] in edges or [index2, index1] in edges:
+                E_Hat.append([i, j])
         else:
-            # Make random sample equal to target points
-            for point in self.target_points:
-                q_rand.append(point)
-            # Assign values to v_near
-            v_near = deepcopy(v_last)
-        v_new = self.informed_expansion(v_near, q_rand)
-        # Get neighbors to v_new that also lie in the tree
-        neighbors = self.get_neighbors(v_new)
-        for node in neighbors:
-            if node not in self.tree:
-                neighbors.remove(node)
-        # TODO: Work on the section below
-        # Get neighbors with minimum cost to connect with v_new
-        n_best = self.get_best_neighbors(neighbors)
-        if n_best is None:
-            return None
-        if self.get_cost(v_new) > self.get_cost(self.best_path):
-            return None
-
-        if v_new not in self.tree:
-            v_new.parent = n_best
-            self.tree.append(v_new)
-        else:
-            self.tree_rewire(v_new, n_best)
-        # TODO: Start with Line 16
-        return v_new
-
-    def tree_rewire(self, node_parent, node):
-        pass
-
-    @staticmethod def get_best_neighbors(neighbors):
-        return neighbors
-
-    @staticmethod def get_cost(node):
-        return 0
+            index1 = vertices.index(GHat[i][0])
+            index2 = vertices.index(GHat[j][0])
+            index3 = vertices.index(GHat[i][1])
+            index4 = vertices.index(GHat[j][1])
+            if ([index1, index2] in edges or [index2, index1] in edges) and (
+                    [index3, index4] in edges or [index4, index3] in edges):
+                E_Hat.append([i, j])
 
 
-if __name__ == '__main__':
-    start = [[51, 71], [50, 33]]
-    target = [[46, 30], [47, 64]]
-    expansion_steps = 300000
+def getNearestNode(node, graph):
+    nearesNode = [[], 99999]
+    for i in graph:
+        distance = sqrt((node[0][0] - i[0][0]) ** 2 + (node[0][1] - i[0][1]) ** 2 + (node[1][0] - i[1][0]) ** 2 + (
+                node[1][1] - i[1][1]) ** 2)
+        if distance < nearesNode[1]:
+            nearesNode[0] = deepcopy(i)
+            nearesNode[1] = deepcopy(distance)
+    return nearesNode[0]
 
-    fixed_nodes = [[60, 38], [51, 47], [50, 33], [51, 71], [69, 72], [36, 38], [19, 61], [5, 93], [5, 93], [26, 95],
-                   [82, 96], [55, 97], [49, 16], [83, 37], [4, 5], [6, 22], [10, 37], [26, 34], [24, 10], [47, 5],
-                   [27, 3],
-                   [46, 30], [68, 3], [70, 20], [70, 32], [92, 6], [93, 27], [7, 61], [5, 79], [24, 73], [47, 64],
-                   [36, 60],
-                   [71, 59], [89, 59], [91, 78], [70, 87], [47, 89]]
 
-    vertices, edges = generateRoadMap(0, 25, fixed_nodes)
-    g_hat = get_graph(vertices)
-    e_hat = get_edge_list(g_hat, vertices, edges)
-    drrt_star = DRRTStar(g_hat, e_hat, start, target, expansion_steps, 2)
-    start_time = time.time()
-    final_path = drrt_star.drrt_star()
-    print('Time taken: ', time.time() - start_time)
-    # Print the final path
-    for node in final_path:
-        print(node.env)
+def Id(nearestNode, point, end):
+    if nearestNode.env[0] == end[0]:
+        neighboursIndexList = []
+        index = GHat.index(nearestNode.env)
+        for i in E_Hat:
+            if index in i:
+                for tempVertex in i:
+                    if tempVertex != index:
+                        neighboursIndexList.append(tempVertex)
+
+        neighboursList = []
+        for index in neighboursIndexList:
+            if GHat[index][0] == end[0]:
+                neighboursList.append(Node(GHat[index]))
+        for i in range(len(neighboursList)):
+            neighboursList[i].updateDistance(point)
+        neighboursList.sort(key=lambda x: x.distance)
+        for neighbour in neighboursList:
+            if neighbour.env[0] != neighbour.env[1]:
+                return (Node(neighbour.env, nearestNode))
+
+    elif nearestNode.env[1] == end[1]:
+        neighboursIndexList = []
+        index = GHat.index(nearestNode.env)
+        for i in E_Hat:
+            if index in i:
+                for tempVertex in i:
+                    if tempVertex != index:
+                        neighboursIndexList.append(tempVertex)
+
+        neighboursList = []
+        for index in neighboursIndexList:
+            if GHat[index][1] == end[1]:
+                neighboursList.append(Node(GHat[index]))
+        for i in range(len(neighboursList)):
+            neighboursList[i].updateDistance(point)
+        neighboursList.sort(key=lambda x: x.distance)
+        for neighbour in neighboursList:
+            if neighbour.env[0] != neighbour.env[1]:
+                return (Node(neighbour.env, nearestNode))
+
+    else:
+        neighboursIndexList = []
+        index = GHat.index(nearestNode.env)
+        for i in E_Hat:
+            if index in i:
+                for tempVertex in i:
+                    if tempVertex != index:
+                        neighboursIndexList.append(tempVertex)
+
+        neighboursList = []
+        for index in neighboursIndexList:
+            neighboursList.append(Node(GHat[index]))
+        for i in range(len(neighboursList)):
+            neighboursList[i].updateDistance(point)
+        neighboursList.sort(key=lambda x: x.distance)
+        for neighbour in neighboursList:
+            if neighbour.env[0] != neighbour.env[1]:
+                return (Node(neighbour.env, nearestNode))
+
+
+def expandRRTStar(lastNode, end, nodes):
+    if lastNode is  None:
+        point = [[np.random.randint(0, 100), np.random.randint(0, 100)],
+                 [np.random.randint(0, 100), np.random.randint(0, 100)]]
+        # point = end
+        # point = GHat[np.random.randint(0, len(GHat))]
+        # Update distances for pre existing nodes from new point
+        for i in range(len(nodes)):
+            nodes[i].updateDistance(point)
+        # Sort existing node list by distance from new point
+        nodes.sort(key=lambda x: x.distance)
+        nearestNode = nodes[0]
+    else:
+        point = deepcopy(end)
+        nearestNode = lastNode
+    newNode = Id(nearestNode, point, end)
+    return newNode
+
+
+def getParent(nodes, val):
+    for node in nodes:
+        if node.env == val:
+            return node
+
+
+def ifInNodes(val, nodes):
+    for node in nodes:
+        if node.env == val:
+            return True
+    return False
+
+
+# start = [[25, 25], [25, 25]]
+# end = [[75, 75], [75, 75]]
+
+start1 = [51, 71]
+start2 = [50, 33]
+end1 = [46, 30]
+end2 = [47, 64]
+# start1 = [24, 10]
+# start2 = [70, 87]
+# end1 = [70, 20]
+# end2 = [24, 73]
+
+start = [start1, start2]
+end = [end1, end2]
+
+nodes = []
+result = []
+nodes.append(Node(start))
+lastNode = deepcopy(nodes[0])
+prev = time()
+for i in range(300000):
+    print(i)
+
+    newNode = expandRRTStar(lastNode, end, nodes)
+    if newNode is not None:
+        nodes.append(newNode)
+        lastNode = deepcopy(newNode)
+    else:
+        lastNode = None
+    if newNode.env == end:
+        # for i in range(len(nodes)):
+        #     nodes[i].updateDistance(end)
+        result = newNode
+        break
+
+for _ in range(2):
+    for node in nodes:
+        neighbourHood = []
+        index = GHat.index(node.env)
+        for i in E_Hat:
+            if index in i:
+                for tempVertex in i:
+                    if tempVertex != index:
+                        if ifInNodes(GHat[tempVertex], nodes):
+                            if tempVertex not in neighbourHood:
+                                neighbourHood.append(tempVertex)
+        for i in neighbourHood:
+            newParent = getParent(nodes, GHat[i])
+            if node.parent is not None:
+                if node.parent.costToCome > newParent.costToCome:
+                    node.parent = newParent
+
+result = list(result.path())
+print(time() - prev, len(result))
+for i in result:
+    print(i.env)
