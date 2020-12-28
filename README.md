@@ -1,4 +1,4 @@
-# Mutli-Robot-MPNet
+# dRRT-Star
 
 ## Implementation of dRRT*
 - Open the terminal, clone the repo and switch to project directory:
