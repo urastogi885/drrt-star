@@ -1,5 +1,5 @@
 # dRRT-Star
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/urastogi885/drrt-star/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/urastogi885/drrt-star/blob/main/LICENSE)
 
 ## Overview
 A 2D implementation of all the algorithms, such as dRRT, ao-dRRT, and dRRT*, mentioned in [Scalable and Informed Asymptotically-Optimal Multi-Robot Motion Planning](https://arxiv.org/pdf/1903.00994.pdf).
