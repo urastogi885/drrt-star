@@ -1,6 +1,6 @@
 # dRRT-Star
 
-## Implementation of dRRT*
+## Run
 - Open the terminal, clone the repo and switch to project directory:
 ```
 git clone https://github.com/urastogi885/multi-robot-mpnet.git
